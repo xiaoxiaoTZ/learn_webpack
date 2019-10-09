@@ -9,5 +9,9 @@
 <body>
     <!-- 模板默认支持ejs语法 -->
     <div id="root"></div>
+    <!-- 建议手动添加cdn文件的引用，如果不添加，可能会导致自动注入多遍cdn的引用 -->
+    <!-- 使用 html-webpack-externals-plugin时需要手动添加以下cdn，采用splitChunk则不用 -->
+    <!-- <script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script> -->
 </body>
 </html>

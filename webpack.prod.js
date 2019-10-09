@@ -7,7 +7,8 @@ const OptimizeCssAssetsPlugin=require('optimize-css-assets-webpack-plugin')
 const HtmlWebpackPlugin=require('html-webpack-plugin')
 const {CleanWebpackPlugin} =require('clean-webpack-plugin')
 const glob=require('glob')
-
+// use pre-packaged vendor bundles 用于预打包公共资源包
+const HtmlWebpackExternalsPlugin = require('html-webpack-externals-plugin')
 
 // console.log('glob',glob.sync(path.join(__dirname,'./src/*/index.js')))
 // [ 'E:/project/learn_webpack/src/index/index.js',
@@ -28,7 +29,9 @@ const setMPA=()=>{
                 // 生成文件的名称
                 filename:`${pageName}.html`,
                 // 使用哪些chunk，此处和entry设置的一致,如果没有设置,则为main
-                chunks:[pageName],
+                // chunks里的顺序与最后注入的顺序无关
+                // 实测发现如下所示，无论如何更改，最后注入的顺序都是 commons,vendors,pageName
+                chunks:["commons","vendors",pageName],
                 // 自动注入css和js，所以模板中不需要再次引入js和css
                 inject:true,
                 // 设置压缩参数
@@ -69,7 +72,7 @@ module.exports={
     },
     // production,development,none
     // 会设置process.env.NODE_ENV的值，并且添加默认的内置plugins
-    mode:'production',
+    mode:'none',
     module:{
         rules:[
             {test:/\.js$/,use:'babel-loader'},
@@ -162,11 +165,30 @@ module.exports={
         //     }
         // }),
         // 每次构建之前清理output指定的输出目录
-        new CleanWebpackPlugin(),
-        ...htmlWebpackPlugin
-    ],
+        new CleanWebpackPlugin()
+        // 利用html-webpack-externals-plugin插件完成公共资源文件的分离处理，将在html中直接引入，打包的bundle中不再引入
+        // 建议将 HtmlWebpackExternalsPlugin 放在 htmlWebpackPlugin 之前，不然会自动注入，可能会注入多遍文件
+        // ,new HtmlWebpackExternalsPlugin({
+        //     externals: [
+        //         {
+        //             // 模块名称
+        //             module: 'react',
+        //             // cdn文件路径
+        //             entry: 'https://unpkg.com/react@16/umd/react.production.min.js',
+        //             // 模块exports的名称，就是文件中使用的名称，必须和使用时一致
+        //             global: 'React'
+        //         },
+        //         {
+        //             module: 'react-dom',
+        //             entry: 'https://unpkg.com/react-dom@16/umd/react-dom.production.min.js',
+        //             global: 'ReactDOM'
+        //         }
+        //     ]
+        // })
+        ,...htmlWebpackPlugin
+    ]
     // SplitChunksPlugin分离基础包（此插件为webpack4内置）
-    optimization:{
+    ,optimization:{
         splitChunks:{
             minSize:0,
             cacheGroups:{
@@ -258,9 +280,23 @@ module.exports={
 //         2.html-inline-css-webpack-plugin  
 
 // 多页面应用（MPA）
+// 详细见setMPA方法
 
+// 提取页面公共资源
+// 1.利用html-webpack-externals-plugin插件完成公共资源文件的分离处理，将文件采用script cdn的方式直接引入，打包bundle的时候不会再次引入
+// 2.使用内置的SplitChunksPlugin进行分离，会把公共资源文件单独打包成vendor文件，并且注入。
 
+// tree shaking（摇树优化）
+// uglify阶段去除掉没有用到的文件中的方法(例如只引用了某个js文件中的一个方法，但是却要引入整个文件)
+// 必须使用es6方式编写的方法，通过静态分析代码的import来判断是否用到了文件中的方法
+// 使用mode:production将默认开启tree shaking
+// 注意tree shaking的原则 
+// DCE:即死码消除，编译器原理中，死码消除（Dead code elimination）
+// 1.代码不会被执行                 import a from '...'   if(false){a()}
+// 2.代码执行的结果没有被使用        import a from '...'   a()
+// 3.代码只会影响死变量(只写不读)    import a from '...'  let result=a() 但是ar没有被使用
 
+// Scope Hoisting(webpack4中mode设置为production默认开启)
 
 /*
     ** 注意：字符串匹配和查找方案：RegExp的exec 和 String的match

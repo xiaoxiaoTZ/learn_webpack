@@ -1,7 +1,16 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import './search.scss'
 import Logo from './img/logo.svg'
+import './search.scss'
+
+// 测试commons公用资源文件
+import {log} from '../../common/index'
+log('test')
+
+import {a} from './treeShaking'
+
+const testA=a()
+log(testA)
 
 class Search extends React.Component{
     render(){
