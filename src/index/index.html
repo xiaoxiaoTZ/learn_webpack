@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 使用raw-loader实现html文件的内联 -->
+    ${require('raw-loader!../meta.html')}
+    <title>Document</title>
+    <!-- 使用raw-loader实现js文件的内联 -->
+    <!-- 由于flexible.js有es6语法，所以使用babel-loader转换一下，依然是从右到左 -->
+    <script>${require('raw-loader!babel-loader!../../node_modules/lib-flexible/flexible.js')}</script>
+</head>
+<body>
+    <!-- 模板默认支持ejs语法 -->
+    <div id="root"></div>
+</body>
+</html>
