@@ -72,7 +72,7 @@ module.exports={
     },
     // production,development,none
     // 会设置process.env.NODE_ENV的值，并且添加默认的内置plugins
-    mode:'none',
+    mode:'production',
     module:{
         rules:[
             {test:/\.js$/,use:'babel-loader'},
@@ -296,7 +296,14 @@ module.exports={
 // 2.代码执行的结果没有被使用        import a from '...'   a()
 // 3.代码只会影响死变量(只写不读)    import a from '...'  let result=a() 但是ar没有被使用
 
-// Scope Hoisting(webpack4中mode设置为production默认开启)
+// Scope Hoisting(webpack4中mode设置为production默认开启) 详情请看webpack.test.js
+
+// 代码分割
+// 1.抽离相同代码到一个共享块 （splitChunkPlugin分离common和vendor）
+// 2.脚本懒加载，使初试下载的代码更小（比如首屏或者tab切换）（代码在真正需要时再加载）
+//  懒加载JS的方式
+//  1. CommonJS: require.ensure
+//  2. ES6:动态import 原生不支持，需要babel转换 (使用babel的 "@babel/plugin-syntax-dynamic-import"插件实现)
 
 /*
     ** 注意：字符串匹配和查找方案：RegExp的exec 和 String的match

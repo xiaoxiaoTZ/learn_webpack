@@ -8,13 +8,15 @@
     "build": "webpack --config webpack.prod.js",
     "watch": "webpack --watch",
     "dev": "webpack-dev-server --config webpack.dev.js --open",
-    "server": "node server.js"
+    "server": "node server.js",
+    "build2": "webpack --config webpack.test.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.5.5",
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
     "@babel/preset-env": "^7.5.5",
     "@babel/preset-react": "^7.0.0",
     "autoprefixer": "^9.6.1",
