@@ -10,7 +10,8 @@
     "dev": "webpack-dev-server --config webpack.dev.js --open",
     "server": "node server.js",
     "build2": "webpack --config webpack.test.js",
-    "package": "webpack --config webpack.package.js"
+    "package": "webpack --config webpack.package.js",
+    "build:ssr": "webpack --config webpack.ssr.js"
   },
   "keywords": [],
   "author": "",
