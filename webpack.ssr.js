@@ -10,41 +10,40 @@ const glob=require('glob')
 // use pre-packaged vendor bundles 用于预打包公共资源包
 const HtmlWebpackExternalsPlugin = require('html-webpack-externals-plugin')
 
-// console.log('glob',glob.sync(path.join(__dirname,'./src/*/index.js')))
-// [ 'E:/project/learn_webpack/src/index/index.js',
-//   'E:/project/learn_webpack/src/search/index.js' ]
 // 多页面应用打包通用方案:
 // 文件目录必须按照规范  每个页面按照名称放在src文件夹下，每个文件夹包括js，css，html模板文件
 // 使用glob插件获取所有页面文件夹的名称，生产对应的entry和htmlWebpackPlugin
 const setMPA=()=>{
     let entry={},htmlWebpackPlugin=[]
-    let arr=glob.sync(path.join(__dirname,'./src/*/index.js'))
+    let arr=glob.sync(path.join(__dirname,'./src/*/index-server.js'))
     arr.map((item)=>{
-        let pageName=/\/src\/(.+)\/index.js$/.exec(item)[1]
-        entry[pageName]=item
-        htmlWebpackPlugin.push(
-            new HtmlWebpackPlugin({
-                // 模板文件位置
-                template:path.join(__dirname,`src/${pageName}/index.html`),
-                // 生成文件的名称
-                filename:`${pageName}.html`,
-                // 使用哪些chunk，此处和entry设置的一致,如果没有设置,则为main
-                // chunks里的顺序与最后注入的顺序无关
-                // 实测发现如下所示，无论如何更改，最后注入的顺序都是 commons,vendors,pageName
-                chunks:["commons","vendors",pageName],
-                // 自动注入css和js，所以模板中不需要再次引入js和css
-                inject:true,
-                // 设置压缩参数
-                minify:{
-                    html5:true,
-                    collapseWhitespace:true,
-                    preserveLineBreaks:false,
-                    minifyCSS:true,
-                    minifyJS:true,
-                    removeComments:false
-                }
-            })
-        )
+        let pageName=/\/src\/(.+)\/index-server.js$/.exec(item)[1]
+        if(pageName){
+            entry[pageName]=item
+            htmlWebpackPlugin.push(
+                new HtmlWebpackPlugin({
+                    // 模板文件位置
+                    template:path.join(__dirname,`src/${pageName}/index.html`),
+                    // 生成文件的名称
+                    filename:`${pageName}.html`,
+                    // 使用哪些chunk，此处和entry设置的一致,如果没有设置,则为main
+                    // chunks里的顺序与最后注入的顺序无关
+                    // 实测发现如下所示，无论如何更改，最后注入的顺序都是 commons,vendors,pageName
+                    chunks:["commons","vendors",pageName],
+                    // 自动注入css和js，所以模板中不需要再次引入js和css
+                    inject:true,
+                    // 设置压缩参数
+                    minify:{
+                        html5:true,
+                        collapseWhitespace:true,
+                        preserveLineBreaks:false,
+                        minifyCSS:true,
+                        minifyJS:true,
+                        removeComments:false
+                    }
+                })
+            )   
+        }
     })
     return {
         entry,
@@ -56,23 +55,19 @@ const {entry,htmlWebpackPlugin}=setMPA()
 
 
 module.exports={
-    // 单入口 采用字符串的方式生成的文件名称为main，采用对象的方式则可以设置生成的文件名称
-    // entry:'./src/search.js',
-    // 多入口
-    // entry:{
-    //     // app:'./src/app.js',
-    //     search:'./src/search.js'
-    // },
     entry:entry,
     output:{
-        // [name] 利用占位符实现多入口的输出打包
-        // js的文件指纹使用chunkhash,chunkhash对应一个入口文件的所有文件，如果任意js或者css更改了，chunkhash都会更改
-        filename:'[name]_[chunkhash:8].js',
-        path:path.join(__dirname,'dist')
+        // server render 不需要hash值
+        filename:'[name]-server.js',
+        path:path.join(__dirname,'dist'),
+        // 设置成umd是因为server render只支持commonjs格式文件
+        libraryTarget: 'umd'
+        // 用于导出默认exports，让使用时更方便
+        // ,libraryExport: 'default'
     },
     // production,development,none
     // 会设置process.env.NODE_ENV的值，并且添加默认的内置plugins
-    mode:'production',
+    mode:'none',
     module:{
         rules:[
             {
@@ -102,17 +97,7 @@ module.exports={
                                 require('autoprefixer')
                             ]
                         }
-                    },
-                    // px2rem的转换
-                    // {
-                    //     loader:'px2rem-loader',
-                    //     options:{
-                    //         // 换算的比例
-                    //         remUnit:75,
-                    //         // 小数点位数
-                    //         remPrecesion:8
-                    //     }
-                    // }
+                    }
                 ]
             },
             // url-loader相比于file-loader可以做图片的base64转换，内部使用的是file-loader
@@ -172,77 +157,56 @@ module.exports={
         // }),
         // 每次构建之前清理output指定的输出目录
         new CleanWebpackPlugin()
-        // 利用html-webpack-externals-plugin插件完成公共资源文件的分离处理，将在html中直接引入，打包的bundle中不再引入
-        // 建议将 HtmlWebpackExternalsPlugin 放在 htmlWebpackPlugin 之前，不然会自动注入，可能会注入多遍文件
-        // ,new HtmlWebpackExternalsPlugin({
-        //     externals: [
-        //         {
-        //             // 模块名称
-        //             module: 'react',
-        //             // cdn文件路径
-        //             entry: 'https://unpkg.com/react@16/umd/react.production.min.js',
-        //             // 模块exports的名称，就是文件中使用的名称，必须和使用时一致
-        //             global: 'React'
-        //         },
-        //         {
-        //             module: 'react-dom',
-        //             entry: 'https://unpkg.com/react-dom@16/umd/react-dom.production.min.js',
-        //             global: 'ReactDOM'
-        //         }
-        //     ]
-        // })
         ,...htmlWebpackPlugin
     ]
-    // SplitChunksPlugin分离基础包（此插件为webpack4内置）
-    ,optimization:{
-        splitChunks:{
-            minSize:0,
-            cacheGroups:{
-                vendors: {
-                    test: /(react|react-dom)/,
-                    name:'vendors',
-                    chunks:'all'
-                },
-                // 至少被引用两次的公共文件
-                commons:{
-                    name:'commons',
-                    chunks:'all',
-                    // 最小引用次数
-                    minChunks:2
-                }
-            }
-        }
-    }
 }
 
-// SSR
+// SSR(server side render)
 /*
     页面打开过程分析（其中1-2的过程中会出现白屏）：
-    1.页面加载
-    2.html加载成功并开始加载数据（js，css）
-    3.数据加载成功，渲染成功开始加载图片资源
+    1.页面开始加载
+    2.html加载成功并开始加载数据（js，css）（此时页面还是空屏因为数据组装和填充都在JS逻辑里面）
+    3.数据加载成功，渲染成功开始加载图片资源（此时页面才有了展示内容，可以进行交互了）
     4.图片加载成功，可以交互
 
     html+js+css+data=>渲染之后的html
-    服务端：
+    服务端渲染优势：
     1.所有资源文件都存储在服务器端
     2.内网拉取数据更快（比在客服端发起http请求或者ajax更快）
     3.一个html返回所有内容
 
+    流程:
+    html请求 => server端找到html模板和data进行拼装 => 客户端渲染html并请求js(此处js为非首屏的JS逻辑代码)(首屏可完全交互) => 整页面可完全交互
+
                 客户端渲染                          服务器渲染
-    请求        多个请求（HTML，资源，数据）          一个请求
+    请求        多个请求（HTML，资源，数据）          一个请求（所有都是server render的情况下）
     加载过程    HTML和数据串行加载                   一个请求返回HTML和所有数据
     渲染        前端渲染                            服务器渲染
     可交互      图片等静态资源加载完成，JS代码逻辑执行完成可交互
 
-    总结：SSR的核心是减少请求（数据请求和资源文件请求）
+    总结:
+    SSR的核心是减少请求（数据请求和资源文件请求）
     SSR为了减少白屏时间，对于SEO更友好
 
     SSR 实现思路
     服务端:
-        使用 react-dom/server 的 renderToString 方法将React组件渲染成字符串
+        使用 react-dom/server 的 renderToString 方法将React组件渲染成字符串（前端代码无法在服务器端使用，例如前端代码中使用了window，document等前端对象）
         服务端路由返回对应的模板
     客户端:
-        打包出针对服务端的组件（前端代码无法在服务器端使用，例如前端代码中使用了window，document等前端对象）
+        打包出针对服务端的组件（根据环境变量判断）
 
+    webpack打包SSR问题
+    1.浏览器的全局变量（Node.js中没有document和window）
+        使用hack，在server.js中添加window和document对象
+        组件适配：将不兼容的组件根据打包环境进行配置
+            1)output添加libraryTarget:'umd'
+            2)把组件中的 ReactDOM.render 改成commonjs的 module.exports = <Search/>
+            3)把组件中的 import from 改成commonjs的 require
+        fetch或者ajax等写法改成axios或者isomorphic-fetch
+    2.样式问题（无法显示）
+        使用ignore-loader忽略css的解析
+
+    server文件中使用html模板文件和占位符实现css样式加载
+    const template=fs.readFileSync(path.join(__dirname,'../dist/search.html'),'utf-8')
+    template.replace('<!--HTML_PLACEHOLDER-->',str)
  */
