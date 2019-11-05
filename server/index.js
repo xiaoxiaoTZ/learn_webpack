@@ -9,6 +9,7 @@ const express=require('express')
 const {renderToString} =require('react-dom/server')
 const SSR=require('../dist/search-server')
 const template=fs.readFileSync(path.join(__dirname,'../dist/search.html'),'utf-8')
+const data=require('./data.json')
 
 const server=(port)=>{
     const app=express()
@@ -30,4 +31,5 @@ server(process.env.PORT||3000)
 
 const renderMarkup=(str)=>{
     return template.replace('<!--HTML_PLACEHOLDER-->',str)
+            .replace('<!--INITIAL_DATA_PLACEHOLDER-->',`<script>var INITIAL_DATA=${JSON.stringify(data)}</script>`)
 }

@@ -19,6 +19,7 @@ class Search extends React.Component{
             Text:null
         }
     }
+    // loadComponent=()=>{
     loadComponent(){
         // 动态引入使用时是一个Promise，参数是完整的exports，所以此处使用的是text.default
         // 动态引入会单独生成一个js文件，直到代码被调用时才去下载并执行对应的JS，动态引入的js采用jsonp的方式加载和使用

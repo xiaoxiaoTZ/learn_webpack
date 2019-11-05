@@ -9,6 +9,7 @@ const {CleanWebpackPlugin} =require('clean-webpack-plugin')
 const glob=require('glob')
 // use pre-packaged vendor bundles 用于预打包公共资源包
 const HtmlWebpackExternalsPlugin = require('html-webpack-externals-plugin')
+const FriendlyErrorsWebpackPlugin=require('friendly-errors-webpack-plugin')
 
 // console.log('glob',glob.sync(path.join(__dirname,'./src/*/index.js')))
 // [ 'E:/project/learn_webpack/src/index/index.js',
@@ -116,15 +117,15 @@ module.exports={
                 ]
             },
             // url-loader相比于file-loader可以做图片的base64转换，内部使用的是file-loader
-            // {
-            //     test:/\.(jpe?g|gif|svg)$/,
-            //     use:{
-            //         loader:'url-loader',
-            //         options:{
-            //             limit:10240
-            //         }
-            //     }
-            // }
+            {
+                test:/\.(jpe?g|gif|svg)$/,
+                use:{
+                    loader:'url-loader',
+                    options:{
+                        limit:10240
+                    }
+                }
+            },
             // 图片，字体的文件指纹设置 此处的hash对应的是contenthash，是根据文件的md5生成的
             {
                 test:/\.(jpe?g|gif|svg)$/,
@@ -135,6 +136,11 @@ module.exports={
                         name:'img/[name]_[hash:8].[ext]'
                     }
                 }
+            },
+            // 字体文件处理
+            {
+                test:/.(woff|woff2|eot|ttf|otf)$/,
+                use:'file-loader'
             }
         ]
     },
@@ -192,6 +198,18 @@ module.exports={
         //     ]
         // })
         ,...htmlWebpackPlugin
+        ,new FriendlyErrorsWebpackPlugin()
+        ,function(){
+            // 手动的错误处理抛出，可以用来上报错误日志，统计构建失败率和次数。
+            // this为compile对象
+            // 此处是webpack4的写法，webpack3改成 this.plugin即可
+            this.hooks.done.tap('done',(stats)=>{
+                if(stats.compilation.errors&&stats.compilation.errors.length&&process.argv.indexOf('--watch')==-1){
+                    console.log('build error')
+                    process.exit(1)
+                }
+            })
+        }
     ]
     // SplitChunksPlugin分离基础包（此插件为webpack4内置）
     ,optimization:{
@@ -213,6 +231,8 @@ module.exports={
             }
         }
     }
+    // 命令行反馈展示 设置stats
+    ,stats:'errors-only'
 }
 
 
@@ -251,6 +271,8 @@ module.exports={
 // rules中的use是链式调用的，并且是从右到左的顺序，所以是['style-loader','css-loader','sass-loader'] (tip:此处使用的是compose方法)
 
 // npm 后缀 -D 相当于 --save-dev  -S 相当于 --save
+
+// 生成默认的package.json包文件 npm init -y
 
 // 文件指纹
 // 用来实现版本管理。利用缓存。
@@ -348,6 +370,25 @@ module.exports={
         打包出针对服务端的组件（前端代码无法在服务器端使用，例如前端代码中使用了window，document等前端对象）
 
  */
+
+/*
+    优化构建时命令行显示日志:
+    统计信息 stats
+    stats:'errors-only' 命令行显示太单一，没有明显标识 
+    使用 friendly-errors-webpack-plugin 
+*/
+
+/*
+    构建失败上报和统计
+    手动的错误处理抛出，可以用来上报错误日志，统计构建失败率和次数。
+    this.hooks.done.tap('done',(stats)=>{
+        if(stats.compilation.errors&&stats.compilation.errors.length&&process.argv.indexOf('--watch')==-1){
+            console.log('build error')
+            process.exit(1)
+        }
+    })
+*/
+
 
 /*
     ** 注意：字符串匹配和查找方案：RegExp的exec 和 String的match

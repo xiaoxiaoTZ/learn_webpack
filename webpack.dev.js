@@ -6,6 +6,7 @@ const {CleanWebpackPlugin} =require('clean-webpack-plugin')
 // const HtmlWebpackPlugin = require('html-webpack-plugin')
 const HtmlWebpackPlugin=require('html-webpack-plugin')
 const glob=require('glob')
+const FriendlyErrorsWebpackPlugin=require('friendly-errors-webpack-plugin')
 
 const setMPA=()=>{
     let entry={},htmlWebpackPlugin=[]
@@ -103,7 +104,8 @@ module.exports={
         // new HtmlWebpackPlugin({
         //   title: 'Development'
         // })
-        new CleanWebpackPlugin(),
+        // new CleanWebpackPlugin(),
+        new FriendlyErrorsWebpackPlugin(),
         ...htmlWebpackPlugin
     ]
     ,devServer:{
@@ -111,6 +113,7 @@ module.exports={
         contentBase: path.join(__dirname, "./dist"),
         port:9002,
         hot:true
+        ,stats:'errors-only'
     }
     // 使用 source-map 进行调试可以方便的查看构建之前的源代码，非常的方便
     // ,devtool: 'source-map',

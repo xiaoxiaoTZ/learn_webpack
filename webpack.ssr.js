@@ -202,6 +202,7 @@ module.exports={
             1)output添加libraryTarget:'umd'
             2)把组件中的 ReactDOM.render 改成commonjs的 module.exports = <Search/>
             3)把组件中的 import from 改成commonjs的 require
+            tip:此处配置不能添加 optimization(SplitChunksPlugin功能，不然无法打出对应的服务器端组件包)
         fetch或者ajax等写法改成axios或者isomorphic-fetch
     2.样式问题（无法显示）
         使用ignore-loader忽略css的解析
@@ -209,4 +210,6 @@ module.exports={
     server文件中使用html模板文件和占位符实现css样式加载
     const template=fs.readFileSync(path.join(__dirname,'../dist/search.html'),'utf-8')
     template.replace('<!--HTML_PLACEHOLDER-->',str)
+
+
  */
